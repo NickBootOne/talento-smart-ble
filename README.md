@@ -1,5 +1,8 @@
 # Talento smart BLE — onderzoeksversie 0.1.0
 
+[![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
+[![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
+
 Home Assistant-custom integration voor het verzamelen van GATT-metadata van een Grässlin talento smart C15. Dit is een ontwikkelbasis voor HACS, geen werkende relaisschakelaar. FIX, override, PIN-authenticatie en actuele relaisstatus zijn nog niet geïmplementeerd. Er worden geen characteristic-values gelezen of geschreven. De inspectie maakt wel een BLE-verbinding en vraagt GATT-metadata op.
 
 ## Nu handmatig installeren
