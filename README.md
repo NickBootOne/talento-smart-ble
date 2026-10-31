@@ -1,4 +1,4 @@
-# Talento smart BLE — onderzoeksversie 0.1.0
+# Talento smart BLE — onderzoeksversie 2026.10.1
 
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
@@ -21,7 +21,9 @@ Projectrepository: https://github.com/NickBootOne/talento-smart-ble . Voeg deze 
 
 HACS controleert periodiek op nieuwe versies; een GitHub-release verschijnt dus niet gegarandeerd onmiddellijk. Installeren gebeurt via de update-entiteit. Automatisch installeren vereist een eigen Home Assistant-automatisering met `update.install`; gewijzigde Python-code wordt na een herstart actief. Deze repository wijzigt geen Home Assistant-automatiseringen en voert geen herstarts uit. De update-entiteit-ID moet na installatie in je eigen Home Assistant worden vastgesteld.
 
-Voor volgende releases: pas `version` in het manifest aan, werk de code bij en push een overeenkomstige tag, bijvoorbeeld `v0.1.1`. De Release-workflow voert transporttests uit, controleert de versie en publiceert een GitHub-release. Publiceer alleen versies die klaar zijn voor de gebruikers van dit onderzoeksproject. De controles bewijzen geen werking op hardware.
+Versienummers volgen `JAAR.MAAND.VOLGNUMMER`: `2026.10.1` is de eerste release van oktober 2026, `2026.10.2` de tweede. Het laatste getal is geen dagnummer. Bij een nieuwe maand begint de teller opnieuw op 1, bijvoorbeeld `2026.11.1`. Git-tags krijgen het voorvoegsel `v`.
+
+Voor volgende releases: pas `version` in het manifest en de diagnostiek aan, werk de code en README bij en push een overeenkomstige tag, bijvoorbeeld `v2026.10.2`. De Release-workflow voert transporttests uit, controleert de versie en publiceert een GitHub-release. Publiceer alleen versies die klaar zijn voor de gebruikers van dit onderzoeksproject. De controles bewijzen geen werking op hardware.
 
 Onderstaande stappen gelden wanneer je een eigen kopie van de repository wilt publiceren:
 
