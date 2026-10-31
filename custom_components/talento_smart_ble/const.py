@@ -1,0 +1,5 @@
+DOMAIN = "talento_smart_ble"
+NAME = "Talento smart BLE (onderzoek)"
+CONFIG_SERVICE = "ec040000-04da-47e5-add4-8ed1c9d52fec"
+CHANNEL_SELECT = "ec040004-04da-47e5-add4-8ed1c9d52fec"
+CHANNEL_STATE = "ec040008-04da-47e5-add4-8ed1c9d52fec"

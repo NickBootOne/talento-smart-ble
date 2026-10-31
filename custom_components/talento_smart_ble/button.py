@@ -1,0 +1,28 @@
+from homeassistant.components.button import ButtonEntity
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityCategory
+
+from .entity import TalentoEntity
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([TalentoInspectButton(entry.runtime_data)])
+
+
+class TalentoInspectButton(TalentoEntity, ButtonEntity):
+    _attr_name = "GATT inspecteren"
+    _attr_icon = "mdi:bluetooth-connect"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.address}_inspect"
+
+    @property
+    def available(self):
+        return True
+
+    async def async_press(self):
+        await self.coordinator.async_request_refresh()
+        if not self.coordinator.last_update_success:
+            raise HomeAssistantError("Inspectie mislukt. Controleer bereik, Bluetooth-activering en proxy.")

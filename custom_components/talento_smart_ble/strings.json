@@ -1,0 +1,14 @@
+{
+  "title": "Talento smart BLE (onderzoek)",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Talento smart BLE onderzoeksversie",
+        "description": "Deze versie inspecteert uitsluitend GATT-services. Relaisstatus, FIX en override zijn nog niet beschikbaar. Voer het Bluetooth-MAC-adres van de C15 in. Gebruik een ESPHome Bluetooth Proxy met actieve verbindingen of een lokale Bluetooth-adapter.",
+        "data": {"address": "Bluetooth-MAC-adres"}
+      }
+    },
+    "error": {"invalid_address": "Gebruik een MAC-adres zoals AA:BB:CC:DD:EE:FF."},
+    "abort": {"already_configured": "Dit apparaat is al toegevoegd."}
+  }
+}
