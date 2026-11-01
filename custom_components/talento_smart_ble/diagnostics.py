@@ -1,7 +1,7 @@
 async def async_get_config_entry_diagnostics(hass, entry):
     coordinator = entry.runtime_data
     return {
-        "version": "2026.11.2",
+        "version": "2026.11.3",
         "purpose": "Experimental channel 1 FIX/AUTO control with readback; no override or PIN handshake",
         "last_attempt": coordinator.last_attempt,
         "last_attempt_success": coordinator.last_update_success,
@@ -13,6 +13,9 @@ async def async_get_config_entry_diagnostics(hass, entry):
             "failure": coordinator.status.failure,
             "measurement": coordinator.status.data,
             "fresh": coordinator.status.fresh,
+            "freshness_reason": coordinator.status.freshness_reason,
+            "measurement_age_seconds": coordinator.status.measurement_age_seconds,
+            "poll_interval_seconds": 30,
             "pin_authentication_implemented": False,
             "last_command": coordinator.status.last_command,
         },

@@ -1,5 +1,7 @@
 import asyncio
 import logging
+from datetime import timedelta
+from time import monotonic
 
 from bleak.exc import BleakError
 
@@ -44,13 +46,14 @@ class TalentoCoordinator(DataUpdateCoordinator):
 
 class TalentoStatusCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, entry, inspection):
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_status", config_entry=entry)
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_status", config_entry=entry, update_interval=timedelta(seconds=30))
         self.address = inspection.address
         self.connection_lock = inspection.connection_lock
         self.last_attempt = None
         self.failure = None
         self.last_command = None
         self._cancel_expiry = None
+        self._measured_monotonic = None
         self.async_set_updated_data({"raw_hex": None, "mode": None, "relay": None, "measured_at": None})
         entry.async_on_unload(self.cancel_expiry)
 
@@ -66,17 +69,26 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
         self.async_update_listeners()
 
     @property
+    def measurement_age_seconds(self):
+        if self._measured_monotonic is None:
+            return None
+        return max(0, monotonic() - self._measured_monotonic)
+
+    @property
+    def freshness_reason(self):
+        if not self.last_update_success:
+            return "last_read_failed"
+        age = self.measurement_age_seconds
+        if age is None:
+            return "never_read"
+        return "fresh" if age < 120 else "expired"
+
+    @property
     def fresh(self):
-        measured_at = self.data.get("measured_at")
-        return bool(
-            self.last_update_success and measured_at is not None
-            and (dt_util.utcnow() - dt_util.parse_datetime(measured_at)).total_seconds() < 120
-        )
+        return self.freshness_reason == "fresh"
 
     async def _async_update_data(self):
         self.last_attempt = dt_util.utcnow().isoformat()
-        self.cancel_expiry()
-        self.async_set_updated_data({"raw_hex": None, "mode": None, "relay": None, "measured_at": None})
         async with self.connection_lock:
             device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
             if device is None:
@@ -91,6 +103,8 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
                     "Mogelijk is authenticatie nodig; er is geen PIN-handshake uitgevoerd. Download de diagnostiek."
                 ) from error
         self.failure = None
+        self.cancel_expiry()
+        self._measured_monotonic = monotonic()
         self._cancel_expiry = async_call_later(self.hass, 121, self.expire)
         return {**result, "measured_at": dt_util.utcnow().isoformat()}
 
@@ -100,6 +114,7 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
             self.cancel_expiry()
             self.last_attempt = dt_util.utcnow().isoformat()
             self.last_command = {"requested": command, "at": self.last_attempt, "outcome": "pending"}
+            self._measured_monotonic = None
             self.async_set_updated_data({"raw_hex": None, "mode": None, "relay": None, "measured_at": None})
             device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
             if device is None:
@@ -128,5 +143,6 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
                 raise
             self.failure = None
             self.last_command["outcome"] = "confirmed"
+            self._measured_monotonic = monotonic()
             self.async_set_updated_data({**result, "measured_at": dt_util.utcnow().isoformat()})
             self._cancel_expiry = async_call_later(self.hass, 121, self.expire)
