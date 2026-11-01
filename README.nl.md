@@ -1,11 +1,13 @@
 # Talento smart BLE
 
-<img src="brand/icon.png" width="96" height="96" alt="Talento smart BLE tijdschakelaar met klok en Bluetooth" />
+![Talento smart BLE tijdschakelaar met klok en Bluetooth](https://raw.githubusercontent.com/NickBootOne/talento-smart-ble/main/brand/icon.png)
 
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.8**.
+Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.9**.
+
+Het icoon in de README gebruikt een volledige openbare URL, zodat HACS het ook kan tonen. Het ontbrekende icoon in de HACS-lijst is een afzonderlijk, bekend probleem met het ophalen van lokale integratie-iconen: zie [HACS #5171](https://github.com/hacs/integration/issues/5171). De lokale iconen werken in Home Assistant; een update van deze integratie verandert de HACS-frontend niet. De beheerders melden een oplossing in de nieuwere Marketplace-frontend, afhankelijk van jouw HA-/frontendversie.
 
 Het eigen integratie-icoon wordt meegeleverd in de lokale brand-map (ondersteund vanaf HA 2026.3). Na een update en herstart kan een browser-/appverversing nodig zijn vanwege afbeeldingscaching. Het icoon is een eigen ontwerp voor deze integratie, geen officieel Grässlin- of Home Assistant-logo.
 

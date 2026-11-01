@@ -1,6 +1,6 @@
 # Talento smart BLE
 
-<img src="brand/icon.png" width="96" height="96" alt="Timer switch with a clock and Bluetooth badge" />
+![Talento smart BLE — timer switch with a clock and Bluetooth badge](https://raw.githubusercontent.com/NickBootOne/talento-smart-ble/main/brand/icon.png)
 
 [![Checks](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![HACS and Hassfest](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/validate.yml)
@@ -8,7 +8,11 @@
 
 [Nederlandse handleiding](README.nl.md) · [Issues](https://github.com/NickBootOne/talento-smart-ble/issues) · [Releases](https://github.com/NickBootOne/talento-smart-ble/releases)
 
-Connect a **Grässlin talento smart C15** to Home Assistant through an ESPHome Bluetooth Proxy or a local Bluetooth adapter. Current version: **2026.11.8**.
+Connect a **Grässlin talento smart C15** to Home Assistant through an ESPHome Bluetooth Proxy or a local Bluetooth adapter. Current version: **2026.11.9**.
+
+### Icon visibility in HACS
+
+The README uses an absolute public image URL so it can also render inside HACS. The installed integration ships its own local brand assets, which Home Assistant displays correctly. Some HACS frontends still request list icons from the legacy public brand CDN and cannot display icons provided only by a custom integration. This is a separate frontend limitation, not a missing image in this repository; a Talento update cannot replace HACS's icon lookup. See [HACS issue #5171](https://github.com/hacs/integration/issues/5171). The maintainers report that this is addressed in the newer Marketplace frontend; availability depends on your Home Assistant/frontend version. There is no unsupported icon override added to hacs.json.
 
 This is an independent community integration, not an official Grässlin or Home Assistant integration. You can install it as a **HACS custom repository**; it has not yet been accepted into the default HACS catalog.
 
