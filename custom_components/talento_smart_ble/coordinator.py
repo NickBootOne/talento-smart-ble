@@ -6,11 +6,13 @@ from bleak.exc import BleakError
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .protocol import encode_command
 from .transport import StatusReadError, async_inspect_device, async_read_channel_status
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
         self.connection_lock = inspection.connection_lock
         self.last_attempt = None
         self.failure = None
+        self.last_command = None
         self._cancel_expiry = None
         self.async_set_updated_data({"raw_hex": None, "mode": None, "relay": None, "measured_at": None})
         entry.async_on_unload(self.cancel_expiry)
@@ -90,3 +93,40 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
         self.failure = None
         self._cancel_expiry = async_call_later(self.hass, 121, self.expire)
         return {**result, "measured_at": dt_util.utcnow().isoformat()}
+
+    async def async_execute_command(self, command):
+        encode_command(command)
+        async with self.connection_lock:
+            self.cancel_expiry()
+            self.last_attempt = dt_util.utcnow().isoformat()
+            self.last_command = {"requested": command, "at": self.last_attempt, "outcome": "pending"}
+            self.async_set_updated_data({"raw_hex": None, "mode": None, "relay": None, "measured_at": None})
+            device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
+            if device is None:
+                self.failure = {"stage": "lookup", "reason": "not_seen_by_connectable_adapter", "command_may_have_applied": False}
+                self.last_command["outcome"] = "not_sent"
+                error = UpdateFailed("C15 niet bereikbaar. Activeer Bluetooth en controleer de proxy.")
+                self.async_set_update_error(error)
+                raise HomeAssistantError(str(error))
+            try:
+                result = await async_read_channel_status(device, command=command)
+            except StatusReadError as error:
+                self.failure = {
+                    "stage": error.stage, "reason": error.reason, "raw_hex": error.raw_hex,
+                    "command_may_have_applied": error.command_may_have_applied,
+                }
+                self.last_command["outcome"] = "unconfirmed" if error.command_may_have_applied else "not_sent"
+                failure = UpdateFailed(
+                    f"Opdracht {command} niet bevestigd bij {error.stage} ({error.reason}). "
+                    "De relaisstand is onbekend; lees opnieuw of controleer de C15. Er wordt niet automatisch opnieuw geschakeld."
+                )
+                self.async_set_update_error(failure)
+                raise HomeAssistantError(str(failure)) from error
+            except asyncio.CancelledError:
+                self.last_command["outcome"] = "cancelled_unknown"
+                self.async_set_update_error(UpdateFailed("Schakelactie afgebroken; werkelijke toestand onbekend."))
+                raise
+            self.failure = None
+            self.last_command["outcome"] = "confirmed"
+            self.async_set_updated_data({**result, "measured_at": dt_util.utcnow().isoformat()})
+            self._cancel_expiry = async_call_later(self.hass, 121, self.expire)

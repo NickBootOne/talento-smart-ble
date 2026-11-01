@@ -1,17 +1,32 @@
-# Talento smart BLE — onderzoeksversie 2026.11.1
+# Talento smart BLE — onderzoeksversie 2026.11.2
 
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-custom integration voor een Grässlin talento smart C15. Naast GATT-inspectie bevat versie 2026.11.1 een handmatige statusleestest voor kanaal 1. FIX, override en PIN-authenticatie zijn nog niet geïmplementeerd. Er worden geen relais- of programmawrites uitgevoerd. De statusleestest schrijft uitsluitend kanaalselectie `01` naar `ec040004-04da-47e5-add4-8ed1c9d52fec`, wacht één seconde en leest `ec040008-04da-47e5-add4-8ed1c9d52fec`. Dit pad komt uit de APK, maar moet nog op jullie hardware worden geverifieerd.
+Home Assistant-custom integration voor een Grässlin talento smart C15. Versie 2026.11.2 voegt experimentele FIX AAN/UIT-bediening en AUTO herstellen toe, met vooraf lezen en verplicht teruglezen na de write. Geen automatische polling, override-bediening of PIN-handshake. De gebruiker heeft met versie 2026.11.1 AUTO/UIT (`00`) uitgelezen via een ESP32-proxy en bevestigd dat het relais fysiek uit stond. De nieuwe schakelbediening is nog niet op hardware getest.
+
+## Schakelbediening testen
+
+1. Update via HACS naar **2026.11.2** en herstart Home Assistant volledig. Laat de proxy op de werkende plaats staan.
+2. Activeer Bluetooth op de C15, sluit de officiële app en druk op **Kanaal 1 status lezen (test)**. Zonder een verse, herkenbare meting is de nieuwe schakelaar unavailable.
+3. Gebruik **Relais (FIX-bediening, test)**: AAN verstuurt FIX AAN; UIT verstuurt FIX UIT. De weergegeven stand komt uitsluitend uit de teruggelezen relaisstatus. In AUTO toont de schakelaar dus ook de actuele relaisstand; bedienen zet de modus expliciet op FIX.
+4. Controleer na AAN de fysieke relaisindicatie en modus: verwacht FIX_ON en ruwe status `02`. Controleer na UIT: FIX_OFF en `03`. Wacht telkens tot de opdracht klaar is.
+5. Druk na de test op **AUTO herstellen (test)** om het tijdprogramma weer te laten bepalen wanneer het relais schakelt. AUTO is geen UIT-opdracht; de teruggelezen stand kan aan of uit zijn. De integratie verstuurt geen programmawijzigingen, maar het fysieke gedrag moet nog worden gecontroleerd.
+6. Download na de test de diagnostiek. Vermeld welke acties fysiek werkten. `status_test.last_command` toont confirmed, not_sent of unconfirmed en `status_test.failure` vermeldt stap, foutklasse en of het commando mogelijk al is uitgevoerd.
+
+**FIX blijft actief totdat je AUTO herstelt.** Bij een fout na de write kan het relais al geschakeld zijn, ook als HA unavailable toont. Er wordt niet automatisch opnieuw geschreven. Lees opnieuw of controleer de C15 en herstel zo nodig AUTO via het apparaat of de officiële app. Een terugleesfout geeft geen automatische tegengestelde opdracht.
+
+Het volledige selecteer-/lees-/schrijf-/terugleespad wordt onder dezelfde vergrendeling uitgevoerd als GATT-inspectie en handmatig lezen. Toegestane write-payloads zijn uitsluitend AUTO `00`, FIX AAN `01`, FIX UIT `02`. De retourcodering verschilt: `01` als antwoord betekent AUTO/AAN, niet FIX AAN. Onbekende beginstatus blokkeert een relaiswrite. Na elke opdracht verlopen de meetwaarden weer na circa twee minuten; dit is nog geen continue statusbewaking.
+
+Override blijft buiten deze release: de APK bevat een OVR-moduscommando, maar de precieze toggle-/richtingsemantiek is nog onvoldoende op hardware vastgesteld.
 
 ## Status testen na de update
 
-1. Installeer **2026.11.1** via de HACS-update en herstart Home Assistant volledig. Je bestaande configuratie blijft behouden.
+1. Installeer de actuele versie via de HACS-update en herstart Home Assistant volledig. Je bestaande configuratie blijft behouden.
 2. Laat de ESP32 staan waar GATT-inspectie werkte, sluit de officiële telefoonapp en activeer Bluetooth op de C15.
 3. Druk op **Kanaal 1 status lezen (test)**. Er zijn geen automatische reads bij opstarten en er is geen polling.
 4. Noteer **Ruwe kanaalstatus (test)**, **Modus laatste testmeting** en **Relais laatste testmeting**. Vergelijk het relais met het scherm van de C15. Dit is één meetmoment; de waarden verlopen na ongeveer twee minuten naar unavailable.
-5. Laat de C15 via zijn eigen bediening of tijdprogramma in de andere relaisstand komen en druk opnieuw op de leesknop. Deze integratie schakelt het relais niet.
+5. Laat de C15 via zijn eigen bediening of tijdprogramma in de andere relaisstand komen en druk opnieuw op de leesknop. De leesknop zelf schakelt het relais niet.
 6. Download daarna de diagnostiek en deel de waarden, tijdstippen en de werkelijk waargenomen relaisstand. `status_test.failure` meldt bij fouten in welke stap de test stopte. De ESP32/proxy wordt nog niet afzonderlijk geïdentificeerd in diagnostiek.
 
 Een geslaagde GATT-scan bewijst geen toegestane characteristic-toegang. Een apparaat met PIN-beveiliging kan deze test weigeren; er worden geen PIN's geraden of willekeurige initialisatiewrites gedaan. Een fout kan ook door bereik of een bezette verbinding komen. Bij onbekende statusbytes toont alleen de ruwe sensor een meetwaarde; relais en modus blijven unavailable. Een ongeldige lengte levert een fout op met maximaal 16 ruwe bytes in de diagnostiek.
@@ -64,7 +79,7 @@ Voor betrouwbaar schakelen zijn daarnaast Android HCI-captures nodig van verbind
 
 ## Implementatie en verificatie
 
-De transportlaag gebruikt `bluetooth.async_ble_device_from_address(..., connectable=True)` en `bleak_retry_connector.establish_connection`. Daarmee volgt deze de HA-route voor lokale en proxy-adapters: https://developers.home-assistant.io/docs/bluetooth/ . De verbinding wordt na elke test gesloten. GATT-inspectie en statuslezen delen één verbindingsvergrendeling. Er worden geen pairing-, relais-, programma- of firmwareacties uitgevoerd.
+De transportlaag gebruikt `bluetooth.async_ble_device_from_address(..., connectable=True)` en `bleak_retry_connector.establish_connection`. Daarmee volgt deze de HA-route voor lokale en proxy-adapters: https://developers.home-assistant.io/docs/bluetooth/ . De verbinding wordt na elke test gesloten. Alle transacties delen één verbindingsvergrendeling. Er worden geen pairing-, programma- of firmwareacties uitgevoerd. Relaiswrites zijn uitsluitend de drie hierboven beschreven FIX/AUTO-commando's.
 
 Gecontroleerd met geïsoleerde tests: kanaalselectie, wachttijd/read-volgorde, foutafhandeling, opruimen en statusdecodering. De vorige GATT-inspectie werkte volgens de aangeleverde diagnostiek op HA 2026.10.4; de gebruiker bevestigde gebruik van een ESP32-proxy. De nieuwe statusleestest, PIN-authenticatie, continue bereikbaarheid en fysieke statusbetekenis zijn nog niet op hardware getest. Hassfest/HACS-validator en volledige HA-runtime-tests zijn nog niet uitgevoerd.
 

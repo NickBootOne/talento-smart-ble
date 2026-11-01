@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import TalentoCoordinator, TalentoStatusCoordinator
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

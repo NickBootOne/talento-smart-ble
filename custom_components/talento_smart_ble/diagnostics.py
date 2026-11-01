@@ -1,8 +1,8 @@
 async def async_get_config_entry_diagnostics(hass, entry):
     coordinator = entry.runtime_data
     return {
-        "version": "2026.11.1",
-        "purpose": "GATT inspection and manual channel 1 status test; no relay control",
+        "version": "2026.11.2",
+        "purpose": "Experimental channel 1 FIX/AUTO control with readback; no override or PIN handshake",
         "last_attempt": coordinator.last_attempt,
         "last_attempt_success": coordinator.last_update_success,
         "failure_reason": coordinator.failure_reason,
@@ -14,5 +14,6 @@ async def async_get_config_entry_diagnostics(hass, entry):
             "measurement": coordinator.status.data,
             "fresh": coordinator.status.fresh,
             "pin_authentication_implemented": False,
+            "last_command": coordinator.status.last_command,
         },
     }

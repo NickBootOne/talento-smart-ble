@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Talento smart BLE onderzoeksversie",
-        "description": "Onderzoeksversie met GATT-inspectie en een handmatige statusleestest voor kanaal 1. De test schrijft alleen kanaalselectie; FIX, override en PIN-authenticatie ontbreken. Voer het Bluetooth-MAC-adres van de C15 in. Gebruik een ESPHome Bluetooth Proxy met actieve verbindingen of een lokale Bluetooth-adapter.",
+        "description": "Onderzoeksversie met statuslezen en experimentele FIX AAN/UIT-bediening voor kanaal 1. FIX blijft actief totdat je AUTO herstelt. Geen override-bediening of PIN-handshake. Voer het Bluetooth-MAC-adres van de C15 in. Gebruik een ESPHome Bluetooth Proxy met actieve verbindingen of een lokale Bluetooth-adapter.",
         "data": {"address": "Bluetooth-MAC-adres"}
       }
     },

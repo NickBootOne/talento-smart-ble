@@ -32,7 +32,8 @@ class TalentoInspectionSensor(TalentoEntity, SensorEntity):
         return {
             "scanned_at": data["scanned_at"],
             "service_count": len(data["services"]),
-            "relay_control_supported": False,
+            "relay_control_supported": True,
+            "relay_control_experimental": True,
         }
 
 

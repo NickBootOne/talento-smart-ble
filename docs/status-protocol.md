@@ -15,6 +15,14 @@ Bestandsnaamversie is 2.3.9/build 2700; manifestversie en uitgevershandtekening 
 
 De GATT-export van de gebruiker bevestigde beide characteristics in de config-service met read, write en write-without-response. Dat is geen bewijs van autorisatie of toegestane toegang zonder PIN. De test kiest een write met response wanneer de characteristic dat aanbiedt, anders zonder response. Er worden geen abonnements- of authenticatiewrites gedaan. Alleen de selectiewrite en statusread worden uitgevoerd; geen CRC wordt toegevoegd, omdat deze serializer één byte produceert. Dit bewijst niet dat overige protocolpaden geen checksums hebben.
 
-## Nog nodig
+## Schrijfpad voor FIX en AUTO (2026.11.2)
+
+`Base.dll`, `BluetoothConnection.<WriteChannelState>d__112.MoveNext` schrijft eerst ChannelId (IL 0109–012c), wacht de meegegeven delay (01c6–01cc) en schrijft daarna ChannelState (025a–027d). `WriteCommandCreator.ChannelState` richt de payload op ConfigService/type 8. `PackageCreator.AssembleChannelStatePackage` maakt één byte via `ChannelStateToByte` (switch vanaf IL 000d). Enumwaarden in Interfaces.dll: AUTO=0, OVR=1, FixON=2, FixOFF=3; de encoder vertaalt naar respectievelijk 00, 03, 01, 02.
+
+De integratie implementeert alleen AUTO=00, FIX_ON=01 en FIX_OFF=02. De kanaalselectie en wachttijd zijn gelijk aan de inmiddels werkende statusleestest. Een extra pre-read en een readback na de opdracht zijn integratiecontroles; de wachttijd van één seconde na de relaiswrite is een conservatieve testinstelling en nog niet hardwaregevalideerd. De statuswrite wordt éénmaal met response uitgevoerd en niet opnieuw geprobeerd. Na een tweede kanaalselectie en één seconde wachten moet de teruggelezen modus overeenkomen; FIX controleert tevens de relaisstand. AUTO controleert de modus zonder een bepaalde relaisstand te eisen.
+
+Hardwarebewijs tot nu toe: de aangeleverde diagnostiek van versie 2026.11.1 bevat raw_hex=00, mode=AUTO, relay=false, zonder leesfout; de gebruiker bevestigde dat het relais fysiek UIT stond. Dit valideert nog niet de schakelopdrachten of andere statuswaarden.
+
+## Resterende verificatie
 
 Vergelijk ruwe status met fysieke relaisstand in AUTO, FIX en OVR. Bij fouten: diagnostiek met stap en foutklasse. Voor PIN-apparaten en verdere bediening blijven volledige statische analyse en waar nodig officiële-app HCI-captures nodig. Hogere statuswaarden (zoals 08–0d) hebben in de APK afwijkende/ambigue relaisinterpretatie en worden bewust niet vertaald. Er is geen betrouwbare live-status of permanente bereikbaarheid aangetoond.

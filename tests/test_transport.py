@@ -38,6 +38,90 @@ def make_client(service_uuid=None):
 
 
 class TransportTests(unittest.IsolatedAsyncioTestCase):
+    async def test_each_command_is_written_once_and_confirmed_by_readback(self):
+        for command, payload, reply in [("FIX_ON", b"\x01", b"\x02"), ("FIX_OFF", b"\x02", b"\x03"), ("AUTO", b"\x00", b"\x01")]:
+            with self.subTest(command=command):
+                client = make_client()
+                events = []
+                replies = iter([b"\x00", reply])
+
+                async def write(characteristic, value, response):
+                    events.append(("write", characteristic.uuid.lower(), value, response))
+
+                async def read(characteristic):
+                    events.append(("read", characteristic.uuid.lower()))
+                    return next(replies)
+
+                async def wait(seconds):
+                    events.append(("wait", seconds))
+
+                client.write_gatt_char = AsyncMock(side_effect=write)
+                client.read_gatt_char = AsyncMock(side_effect=read)
+                with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", wait):
+                    result = await transport.async_read_channel_status(object(), command=command)
+                self.assertEqual(events, [
+                    ("write", transport.CHANNEL_SELECT, b"\x01", True), ("wait", 1),
+                    ("read", transport.CHANNEL_STATE),
+                    ("write", transport.CHANNEL_STATE, payload, True), ("wait", 1),
+                    ("write", transport.CHANNEL_SELECT, b"\x01", True), ("wait", 1),
+                    ("read", transport.CHANNEL_STATE),
+                ])
+                self.assertEqual(result["mode"], command)
+                client.disconnect.assert_awaited_once()
+
+    async def test_unconfirmed_command_does_not_retry(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock()
+        client.read_gatt_char = AsyncMock(side_effect=[b"\x00", b"\x00"])
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", AsyncMock()):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object(), command="FIX_ON")
+        self.assertEqual(caught.exception.reason, "command_not_confirmed")
+        self.assertTrue(caught.exception.command_may_have_applied)
+        self.assertEqual(caught.exception.raw_hex, "00")
+        self.assertEqual(client.write_gatt_char.await_count, 3)
+        client.disconnect.assert_awaited_once()
+
+    async def test_write_timeout_is_not_retried_or_claimed_successful(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock(side_effect=[None, TimeoutError])
+        client.read_gatt_char = AsyncMock(return_value=b"\x00")
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", AsyncMock()):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object(), command="FIX_ON")
+        self.assertEqual(caught.exception.stage, "write_command")
+        self.assertTrue(caught.exception.command_may_have_applied)
+        self.assertEqual(client.write_gatt_char.await_count, 2)
+        client.disconnect.assert_awaited_once()
+
+    async def test_unknown_initial_status_blocks_relay_command(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock()
+        client.read_gatt_char = AsyncMock(return_value=b"\x08")
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", AsyncMock()):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object(), command="FIX_ON")
+        self.assertFalse(caught.exception.command_may_have_applied)
+        self.assertEqual(caught.exception.reason, "unknown_initial_status")
+        self.assertEqual(client.write_gatt_char.await_count, 1)
+
+    async def test_unsupported_override_is_rejected_before_connecting(self):
+        with patch.object(transport, "establish_connection", AsyncMock()) as connect:
+            with self.assertRaises(ValueError):
+                await transport.async_read_channel_status(object(), command="OVR")
+        connect.assert_not_called()
+
+    async def test_readonly_status_blocks_relay_command(self):
+        client = make_client()
+        client.services[0].characteristics[1].properties = ["read"]
+        client.write_gatt_char = AsyncMock()
+        client.read_gatt_char = AsyncMock(return_value=b"\x00")
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", AsyncMock()):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object(), command="AUTO")
+        self.assertFalse(caught.exception.command_may_have_applied)
+        self.assertEqual(client.write_gatt_char.await_count, 1)
+
     async def test_status_selects_only_channel_one_then_reads(self):
         client = make_client()
         client.write_gatt_char = AsyncMock()
