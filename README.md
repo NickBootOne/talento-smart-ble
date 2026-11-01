@@ -3,7 +3,7 @@
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.4**.
+Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.5**.
 
 ## Functies
 
@@ -12,6 +12,7 @@ Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome B
 - AUTO herstellen zodat het bestaande tijdprogramma weer de schakelingen bepaalt.
 - Iedere schakelopdracht teruglezen en controleren.
 - GATT-inspectie en downloadbare diagnostiek.
+- Opgeslagen programmering ophalen en programmanamen, weekdagen, tijden en datumperiodes bekijken.
 
 FIX/AUTO-bediening werkt volgens de praktijktest van de gebruiker via een ESP32-proxy. AUTO/UIT is fysiek bevestigd; de aangeleverde diagnostiek bevestigt AUTO als laatste opdracht. Langdurige bereikbaarheid, alle firmwarevarianten en PIN-beveiligde apparaten zijn niet volledig gevalideerd. Override, PIN-authenticatie en tijdprogramma's bewerken worden nog niet ondersteund. Deze naamwijziging voegt geen nieuwe protocolfuncties toe.
 
@@ -50,6 +51,8 @@ Plaats de proxy dicht genoeg bij de C15. Sluit de officiële telefoonapp of nRF 
 | Ruwe kanaalstatus | De ontvangen statusbyte |
 | GATT inspecteren | Services en characteristic-properties verzamelen |
 | Laatste GATT-inspectie | Historische uitslag van de handmatige inspectie |
+| Programmering ophalen | Een momentopname van de opgeslagen programmering uitlezen |
+| Programmering | Uitleesresultaat, aantallen en het programma-overzicht in de attributen |
 
 **FIX blijft actief totdat je AUTO herstelt.** De schakelaar kan in AUTO de relaisstand tonen, maar bedienen schakelt expliciet over op FIX. AUTO is geen UIT-opdracht: afhankelijk van het tijdprogramma kan het relais aan of uit staan.
 
@@ -64,6 +67,21 @@ Bij een mislukte read wordt de status unavailable. Zonder nieuwe resultaten verl
 Automatische polling garandeert niet dat een gesloten Bluetooth-venster op de C15 opnieuw geopend kan worden. Bij wegvallende status: controleer proxyplaatsing en Bluetooth-activering en download de diagnostiek terwijl de fout optreedt.
 
 ## Diagnostiek
+
+### Programmering ophalen
+
+1. Werk bij naar **2026.11.5**, herstart Home Assistant en activeer zo nodig Bluetooth op de C15.
+2. Druk op **Programmering ophalen**. Dit gebeurt alleen op verzoek, niet iedere 30 seconden.
+3. Open de entiteit **Programmering** en bekijk de attributen: `overview` bevat maximaal 30 herkenbare regels met programmanamen, weekdagen, tijd of astrotype, actie en kanaal. `program_summaries` bevat maximaal 20 programma's met naam, prioriteit en maximaal twee datumperiodes per programma. Een jaartal of maand met `null` betekent een wildcard.
+4. Vergelijk het resultaat met de officiële app. De nieuwe uitleesfunctie is nog niet op C15-hardware bevestigd. Deel de diagnostiek na de eerste uitlezing, ook bij een fout.
+
+Het volledige resultaat, alle datumperiodes, waarschuwingen en ruwe pakketten staan in de gedownloade diagnostiek onder `programming.snapshot`. Programmanamen en tijdschema's kunnen persoonlijke routines beschrijven; controleer deze voordat je het bestand openbaar deelt. Attribuutvlaggen geven aan of het zichtbare overzicht is ingekort. `rule_count` telt alleen herkende regels.
+
+`opgehaald` betekent dat de overdracht afgerond en de blokken herkend zijn; het is nog geen garantie van hardwaregevalideerde interpretatie. `gedeeltelijk herkend` betekent dat de bytes wel zijn ontvangen, maar sommige regels/velden niet veilig vertaald konden worden. In dat geval zijn de ruwe gegevens behouden en worden ontbrekende regels niet gegokt. Grote puls-/cyclusduren en speciale naamcoderingen kunnen nog aanvullend werk vragen. Astrotijden worden als zonsopkomst/zonsondergang weergegeven, met de ruwe offset; er wordt geen volgend schakelmoment berekend. Extra astrocorrectievlaggen blijven als ruwe gegevens bewaard met waarschuwing.
+
+De momentopname wordt niet automatisch vernieuwd na wijzigingen in de officiële app en verdwijnt na een HA-herstart. Druk opnieuw op de ophaalknop om haar te vernieuwen. Tijdens de overdracht (maximaal circa 100 seconden inclusief afsluiten) wachten statuslezen en schakelopdrachten op dezelfde verbindingsvergrendeling.
+
+De enige write in dit pad is leesrichting `00` naar de overdrachtscharacteristic. Er worden geen programma's, pakkettellers, klokinstellingen of relaiscommando's geschreven. [Protocolbewijs en grenzen](docs/program-protocol.md).
 
 Download de diagnostiek bij Instellingen → Apparaten & diensten → Talento smart BLE → menu. Vanaf 2026.11.4 heet de hoofdsectie `status` (voorheen `status_test`).
 

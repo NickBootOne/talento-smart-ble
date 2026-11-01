@@ -5,6 +5,7 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 
 from .const import CHANNEL_SELECT, CHANNEL_STATE, CONFIG_SERVICE
 from .protocol import command_confirmed, decode_status, encode_command
+from .program import CONTENT, DIRECTION, MAX_PACKETS, MEMORY_SERVICE, PACKAGE_COUNT, decode_program
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,6 +17,58 @@ class StatusReadError(Exception):
         self.reason = reason
         self.raw_hex = raw_hex
         self.command_may_have_applied = False
+
+
+async def async_read_program(device):
+    client = None
+    stage = "connect_program"
+    packets = []
+    try:
+        async with asyncio.timeout(90):
+            client = await establish_connection(BleakClientWithServiceCache, device, "Talento smart programmering", max_attempts=2)
+            stage = "check_program_characteristics"
+            service = next((item for item in client.services if item.uuid.lower() == MEMORY_SERVICE), None)
+            characteristics = {item.uuid.lower(): item for item in service.characteristics} if service else {}
+            direction = characteristics.get(DIRECTION)
+            count = characteristics.get(PACKAGE_COUNT)
+            content = characteristics.get(CONTENT)
+            if direction is None or count is None or content is None:
+                raise StatusReadError(stage, "missing_program_characteristics")
+            if "write" not in direction.properties or "read" not in count.properties or "read" not in content.properties:
+                raise StatusReadError(stage, "program_properties_not_supported")
+            stage = "set_read_direction"
+            await client.write_gatt_char(direction, b"\x00", response=True)
+            await asyncio.sleep(0.5)
+            stage = "read_package_count"
+            value = bytes(await client.read_gatt_char(count))
+            if len(value) != 2:
+                raise StatusReadError(stage, "expected_two_byte_count")
+            total = int.from_bytes(value, "little")
+            if total > MAX_PACKETS:
+                raise StatusReadError(stage, "package_count_exceeds_safety_limit")
+            stage = "read_program_packets"
+            for index in range(total):
+                stage = f"read_program_packet_{index + 1}"
+                packet = bytes(await client.read_gatt_char(content))
+                if len(packet) != 14:
+                    raise StatusReadError(stage, "expected_14_byte_program_packet")
+                packets.append(packet)
+            stage = "decode_program"
+            return {**decode_program(packets), "packet_count": total}
+    except StatusReadError as error:
+        error.packets_received = len(packets)
+        raise
+    except Exception as error:
+        failure = StatusReadError(stage, type(error).__name__)
+        failure.packets_received = len(packets)
+        raise failure from error
+    finally:
+        if client is not None:
+            try:
+                async with asyncio.timeout(10):
+                    await client.disconnect()
+            except Exception:
+                _LOGGER.warning("Program connection disconnect did not complete")
 
 
 async def async_read_channel_status(device, command=None):
