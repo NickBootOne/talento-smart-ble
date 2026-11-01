@@ -1,0 +1,40 @@
+name: HACS and Hassfest
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'custom_components/**'
+      - 'hacs.json'
+      - 'LICENSE'
+      - 'brand/**'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'custom_components/**'
+      - 'hacs.json'
+      - 'LICENSE'
+      - 'brand/**'
+      - '.github/workflows/validate.yml'
+  schedule:
+    - cron: '23 8 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+  hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master

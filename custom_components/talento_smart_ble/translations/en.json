@@ -1,0 +1,62 @@
+{
+  "title": "Talento smart BLE",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Talento smart BLE",
+        "description": "Read channel 1 status and control FIX ON/OFF. FIX remains active until you restore AUTO. Enter the C15 Bluetooth MAC address. Use an ESPHome Bluetooth Proxy with active connections or a local Bluetooth adapter. Override and PIN authentication are not supported yet.",
+        "data": {
+          "address": "Bluetooth MAC address"
+        }
+      }
+    },
+    "error": {
+      "invalid_address": "Enter a MAC address such as AA:BB:CC:DD:EE:FF."
+    },
+    "abort": {
+      "already_configured": "This device has already been configured."
+    }
+  },
+  "entity": {
+    "button": {
+      "inspect": {
+        "name": "Inspect GATT"
+      },
+      "read_status": {
+        "name": "Refresh channel 1 status"
+      },
+      "restore_auto": {
+        "name": "Restore AUTO"
+      },
+      "read_program": {
+        "name": "Retrieve schedule"
+      }
+    },
+    "sensor": {
+      "inspection": {
+        "name": "Last GATT inspection"
+      },
+      "raw_hex": {
+        "name": "Raw channel status"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "relay": {
+        "name": "Relay status",
+        "state": {
+          "aan": "On",
+          "uit": "Off"
+        }
+      },
+      "program": {
+        "name": "Schedule"
+      }
+    },
+    "switch": {
+      "relay_fix": {
+        "name": "Relay (FIX control)"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import TalentoEntity
@@ -15,7 +15,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class TalentoInspectionSensor(TalentoEntity, SensorEntity):
-    _attr_name = "Laatste GATT-inspectie"
+    _attr_translation_key = "inspection"
     _attr_icon = "mdi:list-status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -43,7 +43,10 @@ class TalentoStatusSensor(TalentoEntity, SensorEntity):
     def __init__(self, coordinator, key, name):
         super().__init__(coordinator)
         self.key = key
-        self._attr_name = name
+        self._attr_translation_key = key
+        if key == "relay":
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = ["aan", "uit"]
         self._attr_unique_id = f"{coordinator.address}_status_{key}"
 
     @property
@@ -65,7 +68,7 @@ class TalentoStatusSensor(TalentoEntity, SensorEntity):
 
 
 class TalentoProgramSensor(TalentoEntity, SensorEntity):
-    _attr_name = "Programmering"
+    _attr_translation_key = "program"
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator):
@@ -81,7 +84,7 @@ class TalentoProgramSensor(TalentoEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
         count = self.coordinator.data["program_count"]
-        return f"{count} programma" if count == 1 else f"{count} programma's"
+        return f"{count} program" if count == 1 else f"{count} programs"
 
     @property
     def extra_state_attributes(self):

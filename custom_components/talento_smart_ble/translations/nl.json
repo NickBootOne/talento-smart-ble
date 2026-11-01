@@ -5,10 +5,58 @@
       "user": {
         "title": "Talento smart BLE",
         "description": "Status uitlezen en FIX AAN/UIT-bediening voor kanaal 1. FIX blijft actief totdat je AUTO herstelt. Voer het Bluetooth-MAC-adres van de C15 in. Gebruik een ESPHome Bluetooth Proxy met actieve verbindingen of een lokale Bluetooth-adapter. Override en PIN-authenticatie worden nog niet ondersteund.",
-        "data": {"address": "Bluetooth-MAC-adres"}
+        "data": {
+          "address": "Bluetooth-MAC-adres"
+        }
       }
     },
-    "error": {"invalid_address": "Gebruik een MAC-adres zoals AA:BB:CC:DD:EE:FF."},
-    "abort": {"already_configured": "Dit apparaat is al toegevoegd."}
+    "error": {
+      "invalid_address": "Gebruik een MAC-adres zoals AA:BB:CC:DD:EE:FF."
+    },
+    "abort": {
+      "already_configured": "Dit apparaat is al toegevoegd."
+    }
+  },
+  "entity": {
+    "button": {
+      "inspect": {
+        "name": "GATT inspecteren"
+      },
+      "read_status": {
+        "name": "Kanaal 1 status vernieuwen"
+      },
+      "restore_auto": {
+        "name": "AUTO herstellen"
+      },
+      "read_program": {
+        "name": "Programmering ophalen"
+      }
+    },
+    "sensor": {
+      "inspection": {
+        "name": "Laatste GATT-inspectie"
+      },
+      "raw_hex": {
+        "name": "Ruwe kanaalstatus"
+      },
+      "mode": {
+        "name": "Modus"
+      },
+      "relay": {
+        "name": "Relaisstatus",
+        "state": {
+          "aan": "Aan",
+          "uit": "Uit"
+        }
+      },
+      "program": {
+        "name": "Programmering"
+      }
+    },
+    "switch": {
+      "relay_fix": {
+        "name": "Relais (FIX-bediening)"
+      }
+    }
   }
 }

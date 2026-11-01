@@ -14,7 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class TalentoInspectButton(TalentoEntity, ButtonEntity):
-    _attr_name = "GATT inspecteren"
+    _attr_translation_key = "inspect"
     _attr_icon = "mdi:bluetooth-connect"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -29,11 +29,11 @@ class TalentoInspectButton(TalentoEntity, ButtonEntity):
     async def async_press(self):
         await self.coordinator.async_request_refresh()
         if not self.coordinator.last_update_success:
-            raise HomeAssistantError("Inspectie mislukt. Controleer bereik, Bluetooth-activering en proxy.")
+            raise HomeAssistantError("Inspection failed. Check range, Bluetooth activation and proxy availability.")
 
 
 class TalentoStatusButton(TalentoEntity, ButtonEntity):
-    _attr_name = "Kanaal 1 status vernieuwen"
+    _attr_translation_key = "read_status"
     _attr_icon = "mdi:download-network"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -52,7 +52,7 @@ class TalentoStatusButton(TalentoEntity, ButtonEntity):
 
 
 class TalentoAutoButton(TalentoEntity, ButtonEntity):
-    _attr_name = "AUTO herstellen"
+    _attr_translation_key = "restore_auto"
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator):
@@ -68,7 +68,7 @@ class TalentoAutoButton(TalentoEntity, ButtonEntity):
 
 
 class TalentoProgramButton(TalentoEntity, ButtonEntity):
-    _attr_name = "Programmering ophalen"
+    _attr_translation_key = "read_program"
     _attr_icon = "mdi:calendar-arrow-down"
 
     def __init__(self, coordinator):

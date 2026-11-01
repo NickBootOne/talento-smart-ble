@@ -8,7 +8,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class TalentoRelaySwitch(TalentoEntity, SwitchEntity):
-    _attr_name = "Relais (FIX-bediening)"
+    _attr_translation_key = "relay_fix"
     _attr_icon = "mdi:electric-switch"
 
     def __init__(self, coordinator):

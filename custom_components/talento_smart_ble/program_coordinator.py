@@ -19,11 +19,11 @@ class TalentoProgramCoordinator(DataUpdateCoordinator):
             device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
             if device is None:
                 self.failure = {"stage": "lookup", "reason": "not_seen_by_connectable_adapter"}
-                raise UpdateFailed("C15 niet bereikbaar voor programmering uitlezen.")
+                raise UpdateFailed("C15 unreachable for schedule retrieval.")
             try:
                 result = await async_read_program(device)
             except StatusReadError as error:
                 self.failure = {"stage": error.stage, "reason": error.reason, "packets_received": getattr(error, "packets_received", 0)}
-                raise UpdateFailed(f"Programmering uitlezen mislukt bij {error.stage} ({error.reason}). Download de diagnostiek.") from error
+                raise UpdateFailed(f"Schedule retrieval failed at {error.stage} ({error.reason}). Download diagnostics.") from error
         self.failure = None
         return {**result, "read_at": dt_util.utcnow().isoformat()}

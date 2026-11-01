@@ -1,0 +1,41 @@
+type: markdown
+title: Talento · Schedule
+content: |-
+  {% set devices = states.sensor | selectattr('attributes.talento_program_overview', 'defined') | list %}
+  {% if not devices %}
+  Update Talento smart BLE and press **Retrieve schedule**.
+  {% endif %}
+  {% for device in devices %}
+  ### {{ device.name | e }}
+  {% if device.state in ['unavailable', 'unknown'] %}
+  The schedule is unavailable. Press **Retrieve schedule**.
+  {% else %}
+  **{{ device.attributes.program_count }} programs · {{ device.attributes.display_rule_count }} unique rules**
+
+  | Program | Days | Time | Action | Channel |
+  |:--|:--|:--|:--|:--|
+  {% for row in device.attributes.display_rows -%}
+  | {{ row.program | e | replace('|', '／') | replace('\n', ' ') }} | {{ row.days | replace('Elke dag', 'Every day') | replace('Geen weekdagen', 'No weekdays') | replace('Ma', 'Mon') | replace('Di', 'Tue') | replace('Wo', 'Wed') | replace('Do', 'Thu') | replace('Vr', 'Fri') | replace('Za', 'Sat') | replace('Zo', 'Sun') | replace('ma', 'Mon') | replace('di', 'Tue') | replace('wo', 'Wed') | replace('do', 'Thu') | replace('vr', 'Fri') | replace('za', 'Sat') | replace('zo', 'Sun') }} | {{ row.time | replace('Zonsopkomst', 'Sunrise') | replace('Zonsondergang', 'Sunset') | replace('ruw', 'raw') }} | {{ row.action | replace('WILLEKEURIG AAN', 'RANDOM ON') | replace('WILLEKEURIG UIT', 'RANDOM OFF') | replace('AAN', 'ON') | replace('UIT', 'OFF') | replace('PULS', 'PULSE') | replace('CYCLUS', 'CYCLE') | replace('duur', 'duration') | replace('pauze', 'pause') }} | {{ row.channel }} |
+  {% endfor %}
+  {% if device.attributes.display_rule_count == 0 %}
+  No recognized switching rules were retrieved.
+  {% endif %}
+  {% for row in device.attributes.display_rows %}
+  {% if row.period != 'Geen datumperiode opgehaald' %}
+  **{{ row.program | e | replace('|', '／') }}:** {{ row.period | replace('datumperiodes in diagnostiek', 'date ranges in diagnostics') }}
+  {% endif %}
+  {% endfor %}
+  {% if not device.attributes.complete %}
+  **Note:** some data was not fully recognized. Check diagnostics.
+  {% endif %}
+  {% if device.attributes.duplicate_rule_count > 0 %}
+  _{{ device.attributes.duplicate_rule_count }} identical repetitions were merged only for display. Source data is preserved._
+  {% endif %}
+  {% if device.attributes.display_truncated %}
+  _Showing the first 30 rules. The full snapshot is in diagnostics._
+  {% endif %}
+  Retrieved: {{ as_timestamp(device.attributes.read_at) | timestamp_custom('%Y-%m-%d %H:%M', true) }}
+
+  _Snapshot; retrieve again after changing the schedule._
+  {% endif %}
+  {% endfor %}

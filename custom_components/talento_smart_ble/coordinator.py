@@ -33,13 +33,13 @@ class TalentoCoordinator(DataUpdateCoordinator):
         device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
         if device is None:
             self.failure_reason = "not_seen_by_connectable_adapter"
-            raise UpdateFailed("Geen bereikbare Bluetooth-adapter. Activeer Bluetooth op de C15 en probeer opnieuw.")
+            raise UpdateFailed("No reachable Bluetooth adapter. Enable Bluetooth on the C15 and try again.")
         try:
             async with self.connection_lock:
                 result = await async_inspect_device(device)
         except (BleakError, TimeoutError, OSError) as error:
             self.failure_reason = type(error).__name__
-            raise UpdateFailed("GATT-inspectie mislukt. Controleer bereik en sluit de telefoonapp.") from error
+            raise UpdateFailed("GATT inspection failed. Check range and close the phone app.") from error
         self.failure_reason = None
         return {**result, "scanned_at": dt_util.utcnow().isoformat()}
 
@@ -93,14 +93,14 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
             device = bluetooth.async_ble_device_from_address(self.hass, self.address, connectable=True)
             if device is None:
                 self.failure = {"stage": "lookup", "reason": "not_seen_by_connectable_adapter"}
-                raise UpdateFailed("C15 niet bereikbaar. Activeer Bluetooth en controleer de proxy.")
+                raise UpdateFailed("C15 unreachable. Enable Bluetooth and check the proxy.")
             try:
                 result = await async_read_channel_status(device)
             except StatusReadError as error:
                 self.failure = {"stage": error.stage, "reason": error.reason, "raw_hex": error.raw_hex}
                 raise UpdateFailed(
-                    f"Status uitlezen mislukt bij {error.stage} ({error.reason}). "
-                    "Mogelijk is authenticatie nodig; er is geen PIN-handshake uitgevoerd. Download de diagnostiek."
+                    f"Status read failed at {error.stage} ({error.reason}). "
+                    "Authentication may be required; no PIN handshake was performed. Download diagnostics."
                 ) from error
         self.failure = None
         self.cancel_expiry()
@@ -120,7 +120,7 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
             if device is None:
                 self.failure = {"stage": "lookup", "reason": "not_seen_by_connectable_adapter", "command_may_have_applied": False}
                 self.last_command["outcome"] = "not_sent"
-                error = UpdateFailed("C15 niet bereikbaar. Activeer Bluetooth en controleer de proxy.")
+                error = UpdateFailed("C15 unreachable. Enable Bluetooth and check the proxy.")
                 self.async_set_update_error(error)
                 raise HomeAssistantError(str(error))
             try:
@@ -132,14 +132,14 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
                 }
                 self.last_command["outcome"] = "unconfirmed" if error.command_may_have_applied else "not_sent"
                 failure = UpdateFailed(
-                    f"Opdracht {command} niet bevestigd bij {error.stage} ({error.reason}). "
-                    "De relaisstand is onbekend; lees opnieuw of controleer de C15. Er wordt niet automatisch opnieuw geschakeld."
+                    f"Command {command} was not confirmed at {error.stage} ({error.reason}). "
+                    "The relay state is unknown; refresh status or check the C15. Switching commands are not retried automatically."
                 )
                 self.async_set_update_error(failure)
                 raise HomeAssistantError(str(failure)) from error
             except asyncio.CancelledError:
                 self.last_command["outcome"] = "cancelled_unknown"
-                self.async_set_update_error(UpdateFailed("Schakelactie afgebroken; werkelijke toestand onbekend."))
+                self.async_set_update_error(UpdateFailed("Switching cancelled; actual state unknown."))
                 raise
             self.failure = None
             self.last_command["outcome"] = "confirmed"
