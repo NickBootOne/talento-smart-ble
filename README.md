@@ -1,9 +1,22 @@
-# Talento smart BLE — onderzoeksversie 2026.10.1
+# Talento smart BLE — onderzoeksversie 2026.11.1
 
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-custom integration voor het verzamelen van GATT-metadata van een Grässlin talento smart C15. Dit is een ontwikkelbasis voor HACS, geen werkende relaisschakelaar. FIX, override, PIN-authenticatie en actuele relaisstatus zijn nog niet geïmplementeerd. Er worden geen characteristic-values gelezen of geschreven. De inspectie maakt wel een BLE-verbinding en vraagt GATT-metadata op.
+Home Assistant-custom integration voor een Grässlin talento smart C15. Naast GATT-inspectie bevat versie 2026.11.1 een handmatige statusleestest voor kanaal 1. FIX, override en PIN-authenticatie zijn nog niet geïmplementeerd. Er worden geen relais- of programmawrites uitgevoerd. De statusleestest schrijft uitsluitend kanaalselectie `01` naar `ec040004-04da-47e5-add4-8ed1c9d52fec`, wacht één seconde en leest `ec040008-04da-47e5-add4-8ed1c9d52fec`. Dit pad komt uit de APK, maar moet nog op jullie hardware worden geverifieerd.
+
+## Status testen na de update
+
+1. Installeer **2026.11.1** via de HACS-update en herstart Home Assistant volledig. Je bestaande configuratie blijft behouden.
+2. Laat de ESP32 staan waar GATT-inspectie werkte, sluit de officiële telefoonapp en activeer Bluetooth op de C15.
+3. Druk op **Kanaal 1 status lezen (test)**. Er zijn geen automatische reads bij opstarten en er is geen polling.
+4. Noteer **Ruwe kanaalstatus (test)**, **Modus laatste testmeting** en **Relais laatste testmeting**. Vergelijk het relais met het scherm van de C15. Dit is één meetmoment; de waarden verlopen na ongeveer twee minuten naar unavailable.
+5. Laat de C15 via zijn eigen bediening of tijdprogramma in de andere relaisstand komen en druk opnieuw op de leesknop. Deze integratie schakelt het relais niet.
+6. Download daarna de diagnostiek en deel de waarden, tijdstippen en de werkelijk waargenomen relaisstand. `status_test.failure` meldt bij fouten in welke stap de test stopte. De ESP32/proxy wordt nog niet afzonderlijk geïdentificeerd in diagnostiek.
+
+Een geslaagde GATT-scan bewijst geen toegestane characteristic-toegang. Een apparaat met PIN-beveiliging kan deze test weigeren; er worden geen PIN's geraden of willekeurige initialisatiewrites gedaan. Een fout kan ook door bereik of een bezette verbinding komen. Bij onbekende statusbytes toont alleen de ruwe sensor een meetwaarde; relais en modus blijven unavailable. Een ongeldige lengte levert een fout op met maximaal 16 ruwe bytes in de diagnostiek.
+
+Voor de eerste hardwaretest worden alleen de ondubbelzinnige APK-retourwaarden `00`–`05` vertaald. Waarden met extra bits worden bewaard maar nog niet geïnterpreteerd. Zie [protocolbewijs](docs/status-protocol.md). Gebruik deze testmetingen nog niet voor automatiseringen.
 
 ## Nu handmatig installeren
 
@@ -33,7 +46,7 @@ Onderstaande stappen gelden wanneer je een eigen kopie van de repository wilt pu
 4. Open HACS → menu → Aangepaste repositories. Voeg de repository-URL toe als type Integratie, download en herstart Home Assistant.
 5. Voeg vervolgens de integratie toe via Apparaten & diensten.
 
-Deze structuur volgt de HACS-documentatie: https://www.hacs.xyz/docs/publish/integration/ . Publicatie en HACS-validatie zijn niet uitgevoerd. De ZIP bevat de volledige broncode; een release is optioneel.
+Deze structuur volgt de HACS-documentatie: https://www.hacs.xyz/docs/publish/integration/ . De repository is gepubliceerd; HACS-validatie is nog niet uitgevoerd. De broncode is beschikbaar via GitHub-releases.
 
 ## Bluetooth Proxy en eerste test
 
@@ -51,9 +64,9 @@ Voor betrouwbaar schakelen zijn daarnaast Android HCI-captures nodig van verbind
 
 ## Implementatie en verificatie
 
-De transportlaag gebruikt `bluetooth.async_ble_device_from_address(..., connectable=True)` en `bleak_retry_connector.establish_connection`. Daarmee volgt deze de HA-route voor lokale en proxy-adapters: https://developers.home-assistant.io/docs/bluetooth/ . De verbinding wordt na de inspectie gesloten. Er worden geen willekeurige reads, writes, pairing of firmwareacties uitgevoerd.
+De transportlaag gebruikt `bluetooth.async_ble_device_from_address(..., connectable=True)` en `bleak_retry_connector.establish_connection`. Daarmee volgt deze de HA-route voor lokale en proxy-adapters: https://developers.home-assistant.io/docs/bluetooth/ . De verbinding wordt na elke test gesloten. GATT-inspectie en statuslezen delen één verbindingsvergrendeling. Er worden geen pairing-, relais-, programma- of firmwareacties uitgevoerd.
 
-Lokaal gecontroleerd: Python-syntax, JSON, pakketstructuur en geïsoleerde transporttests met namaakapparaten. Niet uitgevoerd: laden in een echte Home Assistant-installatie, hassfest/HACS-validator, een echte ESPHome-proxyverbinding of C15-hardwaretest. Dit pakket mag daarom niet als hardwaregetest worden beschouwd.
+Gecontroleerd met geïsoleerde tests: kanaalselectie, wachttijd/read-volgorde, foutafhandeling, opruimen en statusdecodering. De vorige GATT-inspectie werkte volgens de aangeleverde diagnostiek op HA 2026.10.4; de gebruiker bevestigde gebruik van een ESP32-proxy. De nieuwe statusleestest, PIN-authenticatie, continue bereikbaarheid en fysieke statusbetekenis zijn nog niet op hardware getest. Hassfest/HACS-validator en volledige HA-runtime-tests zijn nog niet uitgevoerd.
 
 Transporttests: `python -m unittest discover -s tests -v`. Deze vereisen geen Home Assistant of Bluetooth-hardware.
 

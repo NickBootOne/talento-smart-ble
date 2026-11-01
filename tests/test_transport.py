@@ -38,6 +38,58 @@ def make_client(service_uuid=None):
 
 
 class TransportTests(unittest.IsolatedAsyncioTestCase):
+    async def test_status_selects_only_channel_one_then_reads(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock()
+        client.read_gatt_char = AsyncMock(return_value=b"\x02")
+        events = []
+        client.write_gatt_char.side_effect = lambda *args, **kwargs: events.append("select")
+        client.read_gatt_char.side_effect = lambda *args: events.append("read") or b"\x02"
+
+        async def wait(seconds):
+            self.assertEqual(seconds, 1)
+            events.append("wait")
+
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", wait):
+            result = await transport.async_read_channel_status(object())
+        self.assertEqual(events, ["select", "wait", "read"])
+        self.assertEqual(result, {"raw_hex": "02", "mode": "FIX_ON", "relay": True})
+        selected = client.services[0].characteristics[0]
+        state = client.services[0].characteristics[1]
+        client.write_gatt_char.assert_awaited_once_with(selected, b"\x01", response=True)
+        client.read_gatt_char.assert_awaited_once_with(state)
+        client.disconnect.assert_awaited_once()
+
+    async def test_status_permission_failure_stops_without_reading(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock(side_effect=PermissionError)
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object())
+        self.assertEqual(caught.exception.stage, "select_channel_1")
+        self.assertEqual(caught.exception.reason, "PermissionError")
+        client.read_gatt_char.assert_not_called()
+        client.disconnect.assert_awaited_once()
+
+    async def test_status_invalid_length_is_not_decoded(self):
+        client = make_client()
+        client.write_gatt_char = AsyncMock()
+        client.read_gatt_char = AsyncMock(return_value=b"\x01\x02")
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)), patch.object(transport.asyncio, "sleep", AsyncMock()):
+            with self.assertRaises(transport.StatusReadError) as caught:
+                await transport.async_read_channel_status(object())
+        self.assertEqual(caught.exception.stage, "decode_status")
+        self.assertEqual(caught.exception.raw_hex, "0102")
+        client.disconnect.assert_awaited_once()
+
+    async def test_status_wrong_service_never_writes(self):
+        client = make_client("00001800-0000-1000-8000-00805f9b34fb")
+        with patch.object(transport, "establish_connection", AsyncMock(return_value=client)):
+            with self.assertRaises(transport.StatusReadError):
+                await transport.async_read_channel_status(object())
+        client.write_gatt_char.assert_not_called()
+        client.disconnect.assert_awaited_once()
+
     async def test_metadata_only_and_disconnect(self):
         client = make_client()
         device = object()

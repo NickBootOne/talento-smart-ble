@@ -5,7 +5,12 @@ from .entity import TalentoEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([TalentoInspectionSensor(entry.runtime_data)])
+    async_add_entities([
+        TalentoInspectionSensor(entry.runtime_data),
+        TalentoStatusSensor(entry.runtime_data.status, "raw_hex", "Ruwe kanaalstatus (test)"),
+        TalentoStatusSensor(entry.runtime_data.status, "mode", "Modus laatste testmeting"),
+        TalentoStatusSensor(entry.runtime_data.status, "relay", "Relais laatste testmeting"),
+    ])
 
 
 class TalentoInspectionSensor(TalentoEntity, SensorEntity):
@@ -28,4 +33,32 @@ class TalentoInspectionSensor(TalentoEntity, SensorEntity):
             "scanned_at": data["scanned_at"],
             "service_count": len(data["services"]),
             "relay_control_supported": False,
+        }
+
+
+class TalentoStatusSensor(TalentoEntity, SensorEntity):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, key, name):
+        super().__init__(coordinator)
+        self.key = key
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.address}_status_{key}"
+
+    @property
+    def available(self):
+        return self.coordinator.fresh and self.coordinator.data.get(self.key) is not None
+
+    @property
+    def native_value(self):
+        value = self.coordinator.data.get(self.key)
+        return ("aan" if value else "uit") if self.key == "relay" and value is not None else value
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "measured_at": self.coordinator.data.get("measured_at"),
+            "channel": 1,
+            "expires_after_seconds": 120,
+            "hardware_verified": False,
         }
