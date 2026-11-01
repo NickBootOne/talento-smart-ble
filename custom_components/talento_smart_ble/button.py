@@ -32,7 +32,7 @@ class TalentoInspectButton(TalentoEntity, ButtonEntity):
 
 
 class TalentoStatusButton(TalentoEntity, ButtonEntity):
-    _attr_name = "Kanaal 1 status lezen (test)"
+    _attr_name = "Kanaal 1 status vernieuwen"
     _attr_icon = "mdi:download-network"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -51,7 +51,7 @@ class TalentoStatusButton(TalentoEntity, ButtonEntity):
 
 
 class TalentoAutoButton(TalentoEntity, ButtonEntity):
-    _attr_name = "AUTO herstellen (test)"
+    _attr_name = "AUTO herstellen"
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator):

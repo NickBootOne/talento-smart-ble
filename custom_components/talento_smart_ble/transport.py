@@ -26,7 +26,7 @@ async def async_read_channel_status(device, command=None):
     try:
         async with asyncio.timeout(45):
             client = await establish_connection(
-                BleakClientWithServiceCache, device, "Talento smart status test", max_attempts=2,
+                BleakClientWithServiceCache, device, "Talento smart status", max_attempts=2,
             )
             stage = "check_characteristics"
             config = next((service for service in client.services if service.uuid.lower() == CONFIG_SERVICE), None)
@@ -84,7 +84,7 @@ async def async_read_channel_status(device, command=None):
                 async with asyncio.timeout(10):
                     await client.disconnect()
             except Exception:
-                _LOGGER.warning("Status test disconnect did not complete")
+                _LOGGER.warning("Status connection disconnect did not complete")
 
 
 async def async_inspect_device(device):

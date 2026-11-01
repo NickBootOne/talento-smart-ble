@@ -7,9 +7,9 @@ from .entity import TalentoEntity
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         TalentoInspectionSensor(entry.runtime_data),
-        TalentoStatusSensor(entry.runtime_data.status, "raw_hex", "Ruwe kanaalstatus (test)"),
-        TalentoStatusSensor(entry.runtime_data.status, "mode", "Modus laatste testmeting"),
-        TalentoStatusSensor(entry.runtime_data.status, "relay", "Relais laatste testmeting"),
+        TalentoStatusSensor(entry.runtime_data.status, "raw_hex", "Ruwe kanaalstatus"),
+        TalentoStatusSensor(entry.runtime_data.status, "mode", "Modus"),
+        TalentoStatusSensor(entry.runtime_data.status, "relay", "Relaisstatus"),
     ])
 
 
@@ -33,7 +33,6 @@ class TalentoInspectionSensor(TalentoEntity, SensorEntity):
             "scanned_at": data["scanned_at"],
             "service_count": len(data["services"]),
             "relay_control_supported": True,
-            "relay_control_experimental": True,
         }
 
 
@@ -61,5 +60,4 @@ class TalentoStatusSensor(TalentoEntity, SensorEntity):
             "measured_at": self.coordinator.data.get("measured_at"),
             "channel": 1,
             "expires_after_seconds": 120,
-            "hardware_verified": False,
         }

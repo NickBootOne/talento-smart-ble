@@ -99,7 +99,7 @@ class TalentoStatusCoordinator(DataUpdateCoordinator):
             except StatusReadError as error:
                 self.failure = {"stage": error.stage, "reason": error.reason, "raw_hex": error.raw_hex}
                 raise UpdateFailed(
-                    f"Statusleestest mislukt bij {error.stage} ({error.reason}). "
+                    f"Status uitlezen mislukt bij {error.stage} ({error.reason}). "
                     "Mogelijk is authenticatie nodig; er is geen PIN-handshake uitgevoerd. Download de diagnostiek."
                 ) from error
         self.failure = None

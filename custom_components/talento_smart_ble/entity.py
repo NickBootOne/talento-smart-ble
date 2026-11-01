@@ -1,7 +1,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, NAME
 
 
 class TalentoEntity(CoordinatorEntity):
@@ -11,6 +11,6 @@ class TalentoEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.address)},
-            name="Talento smart BLE (onderzoek)",
+            name=NAME,
             manufacturer="Grässlin",
         )
