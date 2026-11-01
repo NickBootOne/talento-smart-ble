@@ -1,9 +1,13 @@
 # Talento smart BLE
 
+<img src="brand/icon.png" width="96" height="96" alt="Talento smart BLE tijdschakelaar met klok en Bluetooth" />
+
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.6**.
+Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.7**.
+
+Het eigen integratie-icoon wordt meegeleverd in de lokale brand-map (ondersteund vanaf HA 2026.3). Na een update en herstart kan een browser-/appverversing nodig zijn vanwege afbeeldingscaching. Het icoon is een eigen ontwerp voor deze integratie, geen officieel Grässlin- of Home Assistant-logo.
 
 ## Functies
 
