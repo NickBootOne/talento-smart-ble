@@ -1,0 +1,41 @@
+type: markdown
+title: Talento · Programmering
+content: |-
+  {% set devices = states.sensor | selectattr('attributes.talento_program_overview', 'defined') | list %}
+  {% if not devices %}
+  Werk Talento smart BLE bij en druk op **Programmering ophalen**.
+  {% endif %}
+  {% for device in devices %}
+  ### {{ device.name | e }}
+  {% if device.state in ['unavailable', 'unknown'] %}
+  Het overzicht is niet beschikbaar. Druk op **Programmering ophalen**.
+  {% else %}
+  **{{ device.attributes.program_count }} programma's · {{ device.attributes.display_rule_count }} unieke regels**
+
+  | Programma | Dagen | Tijd | Actie | Kanaal |
+  |:--|:--|:--|:--|:--|
+  {% for row in device.attributes.display_rows -%}
+  | {{ row.program | e | replace('|', '／') | replace('\n', ' ') }} | {{ row.days }} | {{ row.time }} | {{ row.action }} | {{ row.channel }} |
+  {% endfor %}
+  {% if device.attributes.display_rule_count == 0 %}
+  Geen herkenbare schakelregels opgehaald.
+  {% endif %}
+  {% for row in device.attributes.display_rows %}
+  {% if row.period != 'Geen datumperiode opgehaald' %}
+  **{{ row.program | e | replace('|', '／') }}:** {{ row.period }}
+  {% endif %}
+  {% endfor %}
+  {% if not device.attributes.complete %}
+  **Let op:** enkele gegevens zijn nog niet volledig herkend. Bekijk de diagnostiek.
+  {% endif %}
+  {% if device.attributes.duplicate_rule_count > 0 %}
+  _{{ device.attributes.duplicate_rule_count }} identieke herhalingen zijn alleen in deze weergave samengevoegd. De brongegevens blijven bewaard._
+  {% endif %}
+  {% if device.attributes.display_truncated %}
+  _De eerste 30 regels worden getoond. Het volledige overzicht staat in de diagnostiek._
+  {% endif %}
+  Opgehaald: {{ as_timestamp(device.attributes.read_at) | timestamp_custom('%d-%m-%Y %H:%M', true) }}
+
+  _Momentopname; na wijzigingen opnieuw ophalen._
+  {% endif %}
+  {% endfor %}

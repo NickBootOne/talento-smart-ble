@@ -6,6 +6,56 @@ MAX_PACKETS = 2048
 WEEKDAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"]
 
 
+def display_days(days):
+    ordered = [day for day in ["ma", "di", "wo", "do", "vr", "za", "zo"] if day in days]
+    if len(ordered) == 7:
+        return "Elke dag"
+    groups = []
+    for day in ordered:
+        index = ["ma", "di", "wo", "do", "vr", "za", "zo"].index(day)
+        if groups and index == groups[-1][-1][0] + 1:
+            groups[-1].append((index, day))
+        else:
+            groups.append([(index, day)])
+    return ", ".join(
+        f"{group[0][1]}–{group[-1][1]}" if len(group) > 2 else ", ".join(item[1] for item in group)
+        for group in groups
+    ).capitalize() or "Geen weekdagen"
+
+
+def display_date(parts):
+    return "-".join("*" if parts[key] is None else str(parts[key]).zfill(4 if key == "year" else 2) for key in ["day", "month", "year"])
+
+
+def build_display(programs):
+    rows = []
+    duplicates = 0
+    for program in programs:
+        unique = []
+        for rule in program["rules"]:
+            if rule in unique:
+                duplicates += 1
+                continue
+            unique.append(rule)
+            moment = rule.get("time", rule["time_type"].replace("_", " ").capitalize())
+            if rule["time_type"] == "TIJD" and moment.endswith(":00"):
+                moment = moment[:-3]
+            elif rule["time_type"] != "TIJD":
+                moment += f" (offset {rule['offset_raw']:+}, ruw)"
+            action = rule["action"].replace("_", " ")
+            if "duration" in rule:
+                action += f" · duur {rule['duration']}, pauze {rule['pause']}"
+            periods = "; ".join(f"{display_date(period['start'])} – {display_date(period['end'])}" for period in program["date_ranges"][:2])
+            if len(program["date_ranges"]) > 2:
+                periods += f" (+{len(program['date_ranges']) - 2} datumperiodes in diagnostiek)"
+            rows.append({
+                "program": program["name"], "days": display_days(rule["weekdays"]),
+                "time": moment, "action": action, "channel": ", ".join(map(str, rule["channels"])),
+                "period": periods or "Geen datumperiode opgehaald",
+            })
+    return {"display_rows": rows[:30], "display_rule_count": len(rows), "display_truncated": len(rows) > 30, "duplicate_rule_count": duplicates}
+
+
 def text(value):
     return value.split(b"\x00", 1)[0].decode("cp1252", errors="replace")
 
@@ -61,7 +111,7 @@ def decode_program(packets):
                 "id": identifier, "name": text(packet[2:13]), "priority": packet[13],
                 "date_ranges": [], "rules": [], "date_range_flag": bool(packet[0] & 2),
             }
-            if any(value >= 128 for value in packet[2:13]):
+            if any(value >= 128 for value in packet[2:13].split(b"\x00", 1)[0]):
                 warnings.append({"packet": index, "reason": "name_encoding_requires_verification"})
         elif kind == 12:
             channel_names.append({"channel_raw": packet[1], "name": text(packet[2:])})
@@ -101,6 +151,7 @@ def decode_program(packets):
         for item in list(programs.values())[:20]
     ]
     return {
+        **build_display(list(programs.values())),
         "program_count": len(programs), "rule_count": sum(len(item["rules"]) for item in programs.values()),
         "programs": list(programs.values()), "channel_names": channel_names,
         "complete": not warnings, "warnings": warnings,

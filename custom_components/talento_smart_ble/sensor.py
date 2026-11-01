@@ -80,11 +80,15 @@ class TalentoProgramSensor(TalentoEntity, SensorEntity):
     def native_value(self):
         if self.coordinator.data is None:
             return None
-        return "opgehaald" if self.coordinator.data["complete"] else "gedeeltelijk herkend"
+        count = self.coordinator.data["program_count"]
+        return f"{count} programma" if count == 1 else f"{count} programma's"
 
     @property
     def extra_state_attributes(self):
         data = self.coordinator.data
         if data is None:
             return {}
-        return {key: data[key] for key in ["read_at", "program_count", "rule_count", "packet_count", "overview", "overview_truncated", "program_summaries", "program_summaries_truncated"]}
+        return {
+            "talento_program_overview": True,
+            **{key: data[key] for key in ["read_at", "program_count", "rule_count", "packet_count", "overview", "overview_truncated", "program_summaries", "program_summaries_truncated", "display_rows", "display_rule_count", "display_truncated", "duplicate_rule_count", "complete"]},
+        }

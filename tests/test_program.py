@@ -33,6 +33,30 @@ def rule(identifier=1, action=16):
 
 
 class ProgramDecoderTests(unittest.TestCase):
+    def test_padded_names_and_duplicate_rules_only_affect_display(self):
+        first = bytes.fromhex("00005072673100ffffffffffff00")
+        second = bytes.fromhex("00015072673200ffffffffffff00")
+        on = bytes.fromhex("08001001001e1037000000000000")
+        off = bytes.fromhex("08010801001e1525000000000000")
+        result = program.decode_program([first, second, on, on, on, off, off, off])
+        self.assertTrue(result["complete"])
+        self.assertEqual(result["rule_count"], 6)
+        self.assertEqual(result["display_rule_count"], 2)
+        self.assertEqual(result["duplicate_rule_count"], 4)
+        self.assertEqual(result["display_rows"][0]["days"], "Ma–do")
+        self.assertEqual(result["display_rows"][0]["time"], "16:55")
+        self.assertEqual(result["display_rows"][1]["time"], "21:37")
+        self.assertEqual(len(result["raw_packets"]), 8)
+
+    def test_same_rule_in_different_programs_is_not_merged(self):
+        result = program.decode_program([header(1), header(2), rule(1), rule(2)])
+        self.assertEqual(result["display_rule_count"], 2)
+        self.assertEqual(result["duplicate_rule_count"], 0)
+
+    def test_real_non_ascii_name_still_warns(self):
+        result = program.decode_program([header(name=b"Caf\xe9"), rule()])
+        self.assertFalse(result["complete"])
+
     def test_weekday_on_and_off_rules(self):
         result = program.decode_program([header(), rule(), rule(action=8)])
         self.assertTrue(result["complete"])

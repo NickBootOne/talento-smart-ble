@@ -3,7 +3,7 @@
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.5**.
+Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.6**.
 
 ## Functies
 
@@ -68,6 +68,18 @@ Automatische polling garandeert niet dat een gesloten Bluetooth-venster op de C1
 
 ## Diagnostiek
 
+### Programma-overzicht op je dashboard
+
+1. Update naar **2026.11.6**, herstart Home Assistant en druk opnieuw op **Programmering ophalen**.
+2. Open [de kant-en-klare dashboardkaart](examples/programmering-kaart.yaml) en kopieer de volledige YAML-inhoud.
+3. Open je HA-dashboard → Bewerken → Kaart toevoegen → Handmatig en plak de inhoud. Sla de kaart op.
+
+De kaart zoekt zelf de programmeringssensoren van deze integratie op via een herkenningsattribuut. Je hoeft geen entity-ID in te vullen en er is geen extra frontendplugin nodig. De kaart is een standaard Markdown-kaart; zij wordt niet automatisch aan je dashboard toegevoegd door de integratie-update.
+
+Je ziet programma, compacte weekdagen, tijd, actie en kanaal in een tabel, met datumperiodes en ophaaltijd eronder. Identieke regels binnen hetzelfde programma worden alleen voor de weergave samengevoegd; de kaart vermeldt het aantal herhalingen. Ruwe pakketten, de oorspronkelijke regels en aantallen blijven in de diagnostiek behouden. Dit lost de nog onbekende oorzaak van de herhaalde pakketten niet op. De naamdecoder controleert nu uitsluitend bytes vóór het einde van een naam, zodat opvulbytes geen onterechte coderingswaarschuwing meer geven.
+
+De sensor **Programmering** toont nu het aantal programma's. `display_rows` bevat de tabelregels, `display_rule_count` het unieke aantal en `duplicate_rule_count` het aantal samengevoegde herhalingen. `complete` blijft aangeven of alle ontvangen structuren herkend zijn; de kaart toont een melding bij onvolledige interpretatie. Dit is een momentopname, geen berekening van het volgende schakelmoment.
+
 ### Programmering ophalen
 
 1. Werk bij naar **2026.11.5**, herstart Home Assistant en activeer zo nodig Bluetooth op de C15.
@@ -77,7 +89,7 @@ Automatische polling garandeert niet dat een gesloten Bluetooth-venster op de C1
 
 Het volledige resultaat, alle datumperiodes, waarschuwingen en ruwe pakketten staan in de gedownloade diagnostiek onder `programming.snapshot`. Programmanamen en tijdschema's kunnen persoonlijke routines beschrijven; controleer deze voordat je het bestand openbaar deelt. Attribuutvlaggen geven aan of het zichtbare overzicht is ingekort. `rule_count` telt alleen herkende regels.
 
-`opgehaald` betekent dat de overdracht afgerond en de blokken herkend zijn; het is nog geen garantie van hardwaregevalideerde interpretatie. `gedeeltelijk herkend` betekent dat de bytes wel zijn ontvangen, maar sommige regels/velden niet veilig vertaald konden worden. In dat geval zijn de ruwe gegevens behouden en worden ontbrekende regels niet gegokt. Grote puls-/cyclusduren en speciale naamcoderingen kunnen nog aanvullend werk vragen. Astrotijden worden als zonsopkomst/zonsondergang weergegeven, met de ruwe offset; er wordt geen volgend schakelmoment berekend. Extra astrocorrectievlaggen blijven als ruwe gegevens bewaard met waarschuwing.
+De sensor toont het aantal programma's. Het attribuut `complete` geeft aan of alle ontvangen blokken herkend zijn; dit is nog geen garantie van hardwaregevalideerde interpretatie. Bij `complete: false` zijn sommige regels/velden niet veilig vertaald. De ruwe gegevens blijven behouden en ontbrekende regels worden niet gegokt. Grote puls-/cyclusduren en speciale naamcoderingen kunnen nog aanvullend werk vragen. Astrotijden worden als zonsopkomst/zonsondergang weergegeven, met de ruwe offset; er wordt geen volgend schakelmoment berekend. Extra astrocorrectievlaggen blijven als ruwe gegevens bewaard met waarschuwing.
 
 De momentopname wordt niet automatisch vernieuwd na wijzigingen in de officiële app en verdwijnt na een HA-herstart. Druk opnieuw op de ophaalknop om haar te vernieuwen. Tijdens de overdracht (maximaal circa 100 seconden inclusief afsluiten) wachten statuslezen en schakelopdrachten op dezelfde verbindingsvergrendeling.
 
