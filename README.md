@@ -8,13 +8,13 @@
 
 [Nederlandse handleiding](README.nl.md) · [Issues](https://github.com/NickBootOne/talento-smart-ble/issues) · [Releases](https://github.com/NickBootOne/talento-smart-ble/releases)
 
-Connect a **Grässlin talento smart C15** to Home Assistant through an ESPHome Bluetooth Proxy or a local Bluetooth adapter. Current version: **2026.11.9**.
+Connect a **Grässlin talento smart C15** to Home Assistant through an ESPHome Bluetooth Proxy or a local Bluetooth adapter. Current version: **2026.11.10**.
 
 ### Icon visibility in HACS
 
 The README uses an absolute public image URL so it can also render inside HACS. The installed integration ships its own local brand assets, which Home Assistant displays correctly. Some HACS frontends still request list icons from the legacy public brand CDN and cannot display icons provided only by a custom integration. This is a separate frontend limitation, not a missing image in this repository; a Talento update cannot replace HACS's icon lookup. See [HACS issue #5171](https://github.com/hacs/integration/issues/5171). The maintainers report that this is addressed in the newer Marketplace frontend; availability depends on your Home Assistant/frontend version. There is no unsupported icon override added to hacs.json.
 
-This is an independent community integration, not an official Grässlin or Home Assistant integration. You can install it as a **HACS custom repository**; it has not yet been accepted into the default HACS catalog.
+This independent community integration is included in the **default HACS catalog**. Search for **Talento smart BLE** in HACS to install it. Catalog inclusion does not make it an official Grässlin or Home Assistant integration.
 
 ## Features
 
@@ -44,11 +44,15 @@ Close the official phone app and other BLE clients when using Home Assistant. Ho
 
 ## Installation
 
-1. In HACS, open the menu → **Custom repositories**.
-2. Add `https://github.com/NickBootOne/talento-smart-ble` as an **Integration**.
-3. Download and restart Home Assistant completely.
+1. Open HACS and search for **Talento smart BLE**.
+2. Open the integration and download it.
+3. Restart Home Assistant completely.
 4. Open Settings → Devices & services → Add integration → **Talento smart BLE**.
 5. Enter the C15 Bluetooth MAC address, not the proxy address. Find it on the device under Menu → Config → Bluetooth → Smart Link. Use `AA:BB:CC:DD:EE:FF` format.
+
+### Alternative: custom repository
+
+If the integration does not appear in your HACS search yet, refresh the catalog. You can also open the HACS menu → **Custom repositories**, add `https://github.com/NickBootOne/talento-smart-ble` as an **Integration**, then download and restart Home Assistant. Existing custom-repository installations do not need to be removed or configured again.
 
 Manual installation: copy `custom_components/talento_smart_ble` into `/config/custom_components/` and restart. Internet access is needed to install bleak-retry-connector. Setup validates the address format; it does not guarantee connectivity.
 
@@ -98,7 +102,7 @@ Check files before sharing: schedules and program names can reveal personal rout
 
 ## Development and HACS inclusion
 
-Validation runs on relevant pushes and pull requests, weekly and on demand. HACS and Hassfest run without ignored checks. A green custom test workflow alone is not HACS approval. The catalog submission has not been made yet.
+Validation runs on relevant pushes and pull requests, weekly and on demand. HACS and Hassfest run without ignored checks. The [default-catalog submission](https://github.com/hacs/default/pull/13086) was approved and merged on November 3, 2026.
 
 Run isolated tests: `python -m unittest discover -s tests -v`. These use fake Bluetooth/HA dependencies, not a full Home Assistant runtime. Hardware verification and runtime coverage are tracked in issues.
 

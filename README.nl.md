@@ -5,7 +5,7 @@
 [![Controles](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml/badge.svg?branch=main&event=push)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/check.yml)
 [![Release](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml/badge.svg)](https://github.com/NickBootOne/talento-smart-ble/actions/workflows/release.yml)
 
-Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.9**.
+Home Assistant-integratie voor de Grässlin talento smart C15, via een ESPHome Bluetooth Proxy of lokale Bluetooth-adapter. Actuele versie: **2026.11.10**.
 
 Het icoon in de README gebruikt een volledige openbare URL, zodat HACS het ook kan tonen. Het ontbrekende icoon in de HACS-lijst is een afzonderlijk, bekend probleem met het ophalen van lokale integratie-iconen: zie [HACS #5171](https://github.com/hacs/integration/issues/5171). De lokale iconen werken in Home Assistant; een update van deze integratie verandert de HACS-frontend niet. De beheerders melden een oplossing in de nieuwere Marketplace-frontend, afhankelijk van jouw HA-/frontendversie.
 
@@ -24,13 +24,19 @@ FIX/AUTO-bediening werkt volgens de praktijktest van de gebruiker via een ESP32-
 
 ## Installeren via HACS
 
-1. Open HACS → menu → Aangepaste repositories.
-2. Voeg `https://github.com/NickBootOne/talento-smart-ble` toe als type **Integratie**.
-3. Download de integratie en herstart Home Assistant volledig.
+1. Open HACS en zoek naar **Talento smart BLE**.
+2. Open de integratie en download deze.
+3. Herstart Home Assistant volledig.
 4. Ga naar Instellingen → Apparaten & diensten → Integratie toevoegen → **Talento smart BLE**.
 5. Voer het Bluetooth-MAC-adres van de C15 in, niet dat van de ESP32.
 
 Het MAC-adres staat op de C15 onder Menu → Config/Konfig → Bluetooth → Smart Link. Gebruik de notatie `AA:BB:CC:DD:EE:FF`.
+
+De integratie is opgenomen in de standaard HACS-catalogus: [aanmelding #13086](https://github.com/hacs/default/pull/13086) is goedgekeurd en samengevoegd op 3 november 2026. Het blijft een onafhankelijke community-integratie, geen officiële Grässlin- of Home Assistant-integratie.
+
+### Alternatief: aangepaste repository
+
+Verschijnt de integratie nog niet in de zoekresultaten? Ververs dan de HACS-catalogus. Je kunt ook via het HACS-menu → **Aangepaste repositories** de URL `https://github.com/NickBootOne/talento-smart-ble` toevoegen als type **Integratie**, downloaden en HA herstarten. Bestaande installaties via de aangepaste repository hoeven niet verwijderd of opnieuw ingesteld te worden.
 
 Handmatig installeren kan ook: kopieer `custom_components/talento_smart_ble` uit de broncode naar `/config/custom_components/talento_smart_ble` en herstart Home Assistant. Home Assistant installeert bleak-retry-connector; hiervoor is internettoegang nodig. Installatie valideert het adresformaat, niet meteen de bereikbaarheid van het apparaat.
 

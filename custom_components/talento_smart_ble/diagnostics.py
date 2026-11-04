@@ -1,7 +1,7 @@
 async def async_get_config_entry_diagnostics(hass, entry):
     coordinator = entry.runtime_data
     return {
-        "version": "2026.11.9",
+        "version": "2026.11.10",
         "purpose": "Channel 1 status, FIX/AUTO control and read-only program retrieval; no override or PIN handshake",
         "last_attempt": coordinator.last_attempt,
         "last_attempt_success": coordinator.last_update_success,

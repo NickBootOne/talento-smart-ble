@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/NickBootOne/talento-smart-ble/issues",
   "requirements": ["bleak-retry-connector>=4.7.1"],
-  "version": "2026.11.9"
+  "version": "2026.11.10"
 }
